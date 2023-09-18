@@ -57,6 +57,9 @@
         <Reference Include="DOTweenPro">
           <HintPath>C:\Program Files (x86)\Steam\steamapps\common\A Dance of Fire and Ice\A Dance of Fire and Ice_Data\Managed\DOTweenPro.dll</HintPath>
         </Reference>
+        <Reference Include="ERDPatch">
+          <HintPath>C:\Program Files (x86)\Steam\steamapps\common\A Dance of Fire and Ice\Mods\ERDPatch\ERDPatch.dll</HintPath>
+        </Reference>
         <Reference Include="I18N">
           <HintPath>C:\Program Files (x86)\Steam\steamapps\common\A Dance of Fire and Ice\A Dance of Fire and Ice_Data\Managed\I18N.dll</HintPath>
         </Reference>
@@ -517,10 +520,11 @@
         <Compile Include="CustomEvent\CustomEventBase.cs" />
         <Compile Include="CustomEvent\EventAttrs.cs" />
         <Compile Include="CustomEvent\TestEventBase.cs" />
-        <Compile Include="EnumLib\EnumPatcher.cs" />
+        <Compile Include="EventHandler\IFloorUpdateHandler.cs" />
         <Compile Include="Impl\AddEventPatch.cs" />
+        <Compile Include="Impl\DisplayPatch.cs" />
+        <Compile Include="Impl\EventHandlerPatch.cs" />
         <Compile Include="Impl\PropertyPatches.cs" />
-        <Compile Include="Impl\RemoveEventPatch.cs" />
         <Compile Include="Impl\SaveLoadPatches.cs" />
         <Compile Include="Init.cs" />
         <Compile Include="L.cs" />

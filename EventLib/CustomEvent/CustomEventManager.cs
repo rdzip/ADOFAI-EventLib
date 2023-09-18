@@ -1,49 +1,69 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Drawing;
 using System.Linq;
 using System.Management.Instrumentation;
-using System.Numerics;
 using System.Reflection;
 using ADOFAI;
-using EventLib.EnumLib;
+using ERDPatch;
 using EventLib.Mapping;
+using HarmonyLib;
+using UnityEngine;
 using ADO_PropertyInfo = ADOFAI.PropertyInfo;
+using Color = UnityEngine.Color;
 using PropertyInfo = System.Reflection.PropertyInfo;
+using Vector2 = UnityEngine.Vector2;
 
 namespace EventLib.CustomEvent; 
 
 public static class CustomEventManager {
     public static void RegisterCustomEvent<T>() where T : CustomEventBase {
-        var info = GetLevelEventInfo<T>();
-        GCS.levelEventsInfo.Add(info.name, info);
-        MappingInternal.registeredTypes[info.type] = typeof(T);
+        if (!Init.init) {
+            Init.registrationQueue.Enqueue(typeof(T));
+            return;
+        }
+        RegisterCustomEventInternal(typeof(T));
+    }
+    
+    public static void RegisterCustomEvent(Type type) {
+        if (!Init.init) {
+            Init.registrationQueue.Enqueue(type);
+            return;
+        }
+        RegisterCustomEventInternal(type);
     }
 
-    private static LevelEventInfo GetLevelEventInfo<T>() where T : CustomEventBase {
-        var attr = typeof(T).GetCustomAttribute<CustomEventAttribute>();
+    private static void RegisterCustomEventInternal(Type type) {
+        var info = GetLevelEventInfo(type);
+        GCS.levelEventsInfo.Add(info.name, info);
+        MappingInternal.registeredTypes[info.type] = type;
+    }
+
+    private static LevelEventInfo GetLevelEventInfo(Type type) {
+        var attr = type.GetCustomAttribute<CustomEventAttribute>();
         var info = new LevelEventInfo();
         info.name = attr.id;
         info.type = attr.levelEventType;
         
         EnumPatcher<LevelEventType>.AddField(info.name, (ulong) info.type);
-        GCS.levelEventIcons[info.type] = GCS.levelEventIcons[LevelEventType.SongSettings];
+        var iconMethod = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic).FirstOrDefault(m => m.GetCustomAttribute<EventIconAttribute>() != null);
+        GCS.levelEventIcons[info.type] = (Sprite) iconMethod?.Invoke(null, Array.Empty<object>()) ?? GCS.levelEventIcons[LevelEventType.KillPlayer];
         GCS.levelEventTypeString[info.type] = info.name;
         
         info.allowFirstFloor = attr.allowFirstFloor;
-        info.categories = typeof(T).GetCustomAttributes<EventCategoryAttribute>().Select(c => c.category).ToList();
+        info.categories = type.GetCustomAttributes<EventCategoryAttribute>().Select(c => c.category).ToList();
         info.propertiesInfo = new Dictionary<string, ADO_PropertyInfo>();
 
         MappingInternal.properties[info.type] = new Dictionary<string, MemberInfo>();
         
-        foreach (var m in typeof(T).GetMembers()) {
+        foreach (var m in type.GetMembers()) {
             var f_attr = m.GetCustomAttribute<EventFieldAttribute>();
             if (f_attr == null) continue;
             switch (m) {
                 case PropertyInfo p:
                     var dict = new Dictionary<string, object>();
                     var t = p.PropertyType;
+                    
                     dict["name"] = p.Name;
                     var p_type = f_attr.propertyType switch {
                         PropertyType.NotAssigned when t == typeof(bool) => "Bool",
@@ -64,20 +84,24 @@ public static class CustomEventManager {
                     if (p_type == "Float" && f_attr.minFloat > float.NegativeInfinity) dict["min"] = f_attr.minFloat;
                     if (p_type == "File") dict["fileType"] = f_attr.fileType.ToString();
                     if (f_attr.unit != null) dict["unit"] = f_attr.unit;
-                    if (f_attr.canBeDisabled) dict["canBeDisabled"] = true;
+                    if (f_attr.key != null) dict["key"] = f_attr.key;
                     
                     var d_attr = m.GetCustomAttribute<DisableIfAttribute>();
                     if (d_attr != null) dict["disableIf"] = d_attr.disableIf.Select(d => (object) d).ToList();
                     
                     var h_attr = m.GetCustomAttribute<HideIfAttribute>();
                     if (h_attr != null) dict["hideIf"] = h_attr.hideIf.Select(d => (object) d).ToList();
+                    
+                    var c_attr = m.GetCustomAttribute<CanBeDisabledAttribute>();
+                    if (c_attr != null) dict["canBeDisabled"] = true;
+                    
                     var p_info = new ADO_PropertyInfo(dict, info);
                     info.propertiesInfo[p.Name] = p_info;
-                    
                     break;
                 case FieldInfo f:
                     dict = new Dictionary<string, object>();
                     t = f.FieldType;
+                    
                     dict["name"] = f.Name;
                     p_type = f_attr.propertyType switch {
                         PropertyType.NotAssigned when t == typeof(bool) => "Bool",
@@ -98,16 +122,18 @@ public static class CustomEventManager {
                     if (p_type == "Float" && f_attr.minFloat > float.NegativeInfinity) dict["min"] = f_attr.minFloat;
                     if (p_type == "File") dict["fileType"] = f_attr.fileType.ToString();
                     if (f_attr.unit != null) dict["unit"] = f_attr.unit;
-                    if (f_attr.canBeDisabled) dict["canBeDisabled"] = true;
                     
                     d_attr = m.GetCustomAttribute<DisableIfAttribute>();
                     if (d_attr != null) dict["disableIf"] = d_attr.disableIf.Select(d => (object) d).ToList();
                     
                     h_attr = m.GetCustomAttribute<HideIfAttribute>();
                     if (h_attr != null) dict["hideIf"] = h_attr.hideIf.Select(d => (object) d).ToList();
+                    
+                    c_attr = m.GetCustomAttribute<CanBeDisabledAttribute>();
+                    if (c_attr != null) dict["canBeDisabled"] = true;
+                    
                     p_info = new ADO_PropertyInfo(dict, info);
                     info.propertiesInfo[f.Name] = p_info;
-                    
                     break;
             }
             

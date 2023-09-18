@@ -1,6 +1,6 @@
 ﻿using System;
 using ADOFAI;
-using EventLib.EnumLib;
+using ERDPatch;
 using HarmonyLib;
 using UnityEngine;
 using UnityModManagerNet;
@@ -14,7 +14,7 @@ public abstract class Main {
     private static bool Load(UnityModManager.ModEntry mod_entry) {
         entry = mod_entry;
             
-        entry.OnGUI = OnGUI;
+        //entry.OnGUI = OnGUI;
         harmony = new Harmony(mod_entry.Info.Id);
         harmony.PatchAll();
         return true;
@@ -23,7 +23,9 @@ public abstract class Main {
     private static string asdf = "";
     private static string l = "";
     private static ulong k = 100;
-        
+
+    public static bool showInternalEvents = false;
+    
     private static void OnGUI(UnityModManager.ModEntry mod_entry) {
         GUILayout.Label("Mod Test");
         GUILayout.Label("Special thanks to C##");
@@ -42,5 +44,7 @@ public abstract class Main {
             l += $"{result2}\n";
         }
         GUILayout.Label(l);
+        
+        showInternalEvents = GUILayout.Toggle(showInternalEvents, "Show Internal Events");
     }
 }

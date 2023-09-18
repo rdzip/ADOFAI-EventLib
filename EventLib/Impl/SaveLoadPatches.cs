@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ADOFAI;
 using EventLib.CustomEvent;
@@ -11,17 +12,23 @@ using UnityEngine;
 namespace EventLib.Impl; 
 
 public static class SaveLoadPatches {
-    public static Dictionary<string, object> metadata;
-    public const int MAGIC_NUMBER = int.MaxValue;
+    private static Dictionary<string, object> _metadata;
+    private const int MAGIC_NUMBER = int.MaxValue;
     [HarmonyPatch(typeof(LevelData), "Encode")]
     public static class EncodeLevelPatch {
         public static void Prefix(LevelData __instance) {
-            metadata = new Dictionary<string, object>();
+            _metadata = new Dictionary<string, object>();
+            __instance.levelEvents.AddRange(MappingInternal.internalEvents);
+            __instance.levelEvents.Sort((e1, e2) => e1.floor - e2.floor);
             __instance.levelEvents.Add(new LevelEvent(MAGIC_NUMBER, LevelEventType.EditorComment));
+            
+            __instance.decorations.AddRange(MappingInternal.internalDecos);
         }
         
         public static void Postfix(LevelData __instance) {
             __instance.levelEvents.RemoveAt(__instance.levelEvents.Count - 1);
+            __instance.levelEvents.RemoveAll(MappingInternal.internalEvents.Contains);
+            scnEditor.instance.decorations.RemoveAll(MappingInternal.internalDecos.Contains);
         }
     }
     
@@ -32,7 +39,7 @@ public static class SaveLoadPatches {
             var builder = new StringBuilder();
             builder.Append(RDEditorUtils.EncodeInt("floor", MAGIC_NUMBER));
             builder.Append(RDEditorUtils.EncodeString("eventType", LevelEventType.EditorComment.ToString()));
-            var data = Json.Serialize(metadata)[2..^2];
+            var data = Json.Serialize(_metadata)[2..^2];
             builder.Append(RDEditorUtils.EncodeString("comment", LevelEvent.EscapeTextForJSON($"@Metadata\n{data}"), true));
             __result = builder.ToString();
             return false;
@@ -46,14 +53,36 @@ public static class SaveLoadPatches {
             builder.Append(RDEditorUtils.EncodeString("comment", LevelEvent.EscapeTextForJSON($"@CustomEvent\n{__result}"), true));
             var idx = scnEditor.instance.events.IndexOf(__instance);
             var meta = __instance.GetCustomEvent().EncodeExtra();
-            metadata[$"customEvent_{idx}"] = meta;
+            _metadata[$"customEvent_{idx}"] = meta;
             __result = builder.ToString();
         }
     }
     
     [HarmonyPatch(typeof(LevelData), "Decode")]
     public static class DecodeLevelPatch {
-        public static void Postfix(LevelData __instance, Dictionary<string, object> dict) {
+        public static string metaData = null;
+        
+        public static void Prefix() {
+            metaData = null;
+            MappingInternal.internalEvents.Clear();
+            MappingInternal.internalDecos.Clear();
+        }
+        public static void Postfix() {
+            if (metaData == null) return;
+            var data = (Dictionary<string, object>) Json.Deserialize(metaData);
+            L.og(data);
+            foreach (var (key, value) in data) {
+                var k = int.Parse(key[12..]);
+                var evnt = scnEditor.instance.events[k];
+                var c_evnt = evnt.GetCustomEvent();
+                c_evnt.DecodeExtra(value as Dictionary<string, object>);
+            }
+
+            scnEditor.instance.events.RemoveAll(MappingInternal.internalEvents.Contains);
+            scnEditor.instance.decorations.RemoveAll(MappingInternal.internalDecos.Contains);
+            foreach (var evnt in scnEditor.instance.events.Where(e => e.eventType.IsCustomEventType())) {
+                evnt.GetCustomEvent().OnLoadEvent(evnt.data, evnt.disabled);
+            }
         }
     }
     
@@ -73,18 +102,14 @@ public static class SaveLoadPatches {
                 var evnt = (CustomEventBase)Activator.CreateInstance(type);
                 evnt.editor = scnEditor.instance;
                 evnt.levelEvent = __instance;
-                MappingInternal.customEvents.Add(__instance, evnt);
+                evnt.levelEvent.data["@customEvent"] = evnt;
+                evnt.levelEvent.disabled["@customEvent"] = false;
 
                 return false;
-            } else if (comment.StartsWith("@Metadata")) {
-                var data = Json.Deserialize($"{{{comment[10..]}}}") as Dictionary<string, object>;
-                foreach (var (key, value) in data) {
-                    var k = int.Parse(key[12..]);
-                    var evnt = scnEditor.instance.events[k];
-                    var c_evnt = evnt.GetCustomEvent();
-                    c_evnt.DecodeExtra(value as Dictionary<string, object>);
-                }
+            }
 
+            if (comment.StartsWith("@Metadata")) {
+                DecodeLevelPatch.metaData = $"{{{comment[10..]}}}";
                 return true;
             }
 

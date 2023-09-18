@@ -1,0 +1,8 @@
+﻿{
+  "Id": "EventLib",
+  "DisplayName": "EventLib",
+  "Author": "Cywohoy",
+  "Version": "0.1",
+  "AssemblyName": "EventLib.dll",
+  "EntryMethod": "EventLib.Main.Load"
+}

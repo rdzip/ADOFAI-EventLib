@@ -1,4 +1,6 @@
-﻿using ADOFAI;
+﻿using System;
+using System.Collections.Generic;
+using ADOFAI;
 using EventLib.CustomEvent;
 using EventLib.Mapping;
 using HarmonyLib;
@@ -7,11 +9,20 @@ namespace EventLib;
 
 [HarmonyPatch(typeof(scnEditor), "Awake")]
 public class Init {
-    private static bool _init = false;
+    internal static Queue<Type> registrationQueue = new();
+    internal static bool init = false;
     public static void Prefix() {
-        if (_init) return;
-        _init = true;
+        MappingInternal.internalEvents.Clear();
+        MappingInternal.internalDecos.Clear();
+        
+        if (init) return;
+        init = true;
         CustomEventManager.RegisterCustomEvent<TestEventBase>();
-        MappingInternal.customEvents.Clear();
+        while (registrationQueue.Count > 0) {
+            var type = registrationQueue.Dequeue();
+            CustomEventManager.RegisterCustomEvent(type);
+        }
+
+        registrationQueue = null;
     }
 }

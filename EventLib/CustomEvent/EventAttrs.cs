@@ -34,26 +34,45 @@ namespace EventLib.CustomEvent;
     }
 }
 
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)] public class EventIconAttribute : Attribute { }
+[AttributeUsage(AttributeTargets.Method)] public class EventIconAttribute : Attribute { }
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public class EventFieldAttribute : Attribute {
-    public readonly PropertyType propertyType;
-    public readonly bool affectsFloors = false;
-    public readonly int minInt = int.MinValue;
-    public readonly int maxInt = int.MaxValue;
-    public readonly float minFloat = float.NegativeInfinity;
-    public readonly float maxFloat = float.PositiveInfinity;
+    public bool affectsFloors = false;
+    public int minInt = int.MinValue;
+    public int maxInt = int.MaxValue;
+    public float minFloat = float.NegativeInfinity;
+    public float maxFloat = float.PositiveInfinity;
     public FileType fileType;
-    public bool canBeDisabled;
-
+    
     public string unit = null;
+    public readonly PropertyType propertyType;
+    public readonly string key = null;
+    
+    public EventFieldAttribute(string key, PropertyType property_type) {
+        this.key = key;
+        propertyType = property_type;
+    }
+    
+    public EventFieldAttribute(string key) {
+        this.key = key;
+    }
+    
     public EventFieldAttribute(PropertyType property_type) {
         propertyType = property_type;
     }
 
     public EventFieldAttribute() {
         propertyType = PropertyType.NotAssigned;
+    }
+}
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+public class CanBeDisabledAttribute : Attribute {
+    public readonly bool startEnabled = false;
+    public CanBeDisabledAttribute() { }
+    public CanBeDisabledAttribute(bool start_enabled) {
+        startEnabled = start_enabled;
     }
 }
 

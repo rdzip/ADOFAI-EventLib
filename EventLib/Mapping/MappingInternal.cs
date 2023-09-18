@@ -9,5 +9,6 @@ namespace EventLib.Mapping;
 internal static class MappingInternal {
     public static readonly Dictionary<LevelEventType, Type> registeredTypes = new();
     public static readonly Dictionary<LevelEventType, Dictionary<string, MemberInfo>> properties = new();
-    public static Dictionary<LevelEvent, CustomEventBase> customEvents = new();
+    public static readonly List<LevelEvent> internalEvents = new();
+    public static readonly List<LevelEvent> internalDecos = new();
 }
