@@ -2,7 +2,7 @@
   "Id": "EventLib",
   "DisplayName": "EventLib",
   "Author": "Cywohoy",
-  "Version": "0.1",
+  "Version": "0.2",
   "AssemblyName": "EventLib.dll",
   "EntryMethod": "EventLib.Main.Load"
 }

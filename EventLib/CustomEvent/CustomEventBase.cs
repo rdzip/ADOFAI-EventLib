@@ -7,7 +7,20 @@ namespace EventLib.CustomEvent;
 
 public abstract class CustomEventBase {
     protected internal scnEditor editor { get; internal set; }
-    public LevelEvent levelEvent { get; internal set; }
+
+    public LevelEvent levelEvent {
+        get {
+            if (editor.events.Contains(_levelEvent) && _levelEvent["@customEvent"] == this) return _levelEvent;
+            _levelEvent = editor.events.Find(e => e["@customEvent"] == this);
+            return _levelEvent;
+        }
+        protected internal set {
+            _levelEvent = value;
+            _levelEvent["@customEvent"] = this;
+            _levelEvent.disabled["@customEvent"] = false;
+        }
+    }
+    private LevelEvent _levelEvent;
 
     public virtual void OnAddEvent(int floorId) { }
     public virtual void OnRemoveEvent() { }
@@ -35,4 +48,12 @@ public abstract class CustomEventBase {
     
     public virtual void OnValueChange(string key, object value) { }
     public virtual void OnDisableChange(string key, bool enabled) { }
+    public virtual CustomEventBase Copy(LevelEvent evnt) {
+        var e = (CustomEventBase) Activator.CreateInstance(GetType());
+        e.editor = editor;
+        e.levelEvent = evnt;
+        return e;
+    }
+
+    public bool IsCutOrRemoved => levelEvent == null;
 }

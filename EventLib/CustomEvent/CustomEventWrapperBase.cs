@@ -51,15 +51,17 @@ public abstract class CustomEventWrapperBase : CustomEventBase {
     }
 
     public override void OnRemoveEvent() {
+        System.Diagnostics.StackTrace t = new System.Diagnostics.StackTrace();
+        L.og(t);
         _children.ToList().ForEach(DeleteChildEvent);
         _childDecos.ToList().ForEach(d => DeleteChildDeco(d));
         editor.UpdateDecorationObjects();
     }
 
-    private readonly List<LevelEvent> _children = new();
+    private List<LevelEvent> _children = new();
     public readonly ReadOnlyCollection<LevelEvent> children;
 
-    private readonly List<LevelEvent> _childDecos = new();
+    private List<LevelEvent> _childDecos = new();
     public readonly ReadOnlyCollection<LevelEvent> childDecos;
 
     public override Dictionary<string, object> EncodeExtra() {
@@ -84,5 +86,18 @@ public abstract class CustomEventWrapperBase : CustomEventBase {
                 AddChildDeco(evnt);
             }
         }
+    }
+
+    public override CustomEventBase Copy(LevelEvent evnt) {
+        var custom = (CustomEventWrapperBase) base.Copy(evnt);
+        foreach (var child in _children) {
+            custom.AddChildEvent(child.Copy());
+        }
+        
+        foreach (var child in _childDecos) {
+            custom.AddChildDeco(child.Copy());
+        }
+        
+        return custom;
     }
 }

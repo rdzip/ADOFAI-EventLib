@@ -102,9 +102,6 @@ public static class SaveLoadPatches {
                 var evnt = (CustomEventBase)Activator.CreateInstance(type);
                 evnt.editor = scnEditor.instance;
                 evnt.levelEvent = __instance;
-                evnt.levelEvent.data["@customEvent"] = evnt;
-                evnt.levelEvent.disabled["@customEvent"] = false;
-
                 return false;
             }
 
