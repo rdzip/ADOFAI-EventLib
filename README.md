@@ -12,8 +12,3 @@ EventLib은 기본적으로 커스텀 이벤트를 주석 형식으로 저장하
 아래는 EventLib을 사용해 만든 모드 비의존적 커스텀 이벤트의 예시입니다. (실제로 보이는 부분은 커스텀 이벤트뿐입니다.)
 
 <img width="960px" src="https://github.com/papertoy1127/ADOFAI-EventLib/assets/46876705/c8426d10-ce06-412c-b75d-11c87395c0c5"/>
-
-## EventLib은 언제 출시되나요?
-몰라요 시험기간이에요 바빠요
-
-#### Enum Patch에 도움을 주신 [c3nb(C##)](https://github.com/c3nb)님 감사합니다!
