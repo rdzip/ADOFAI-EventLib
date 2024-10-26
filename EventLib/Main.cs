@@ -1,6 +1,5 @@
 ﻿using System;
 using ADOFAI;
-using ERDPatch;
 using HarmonyLib;
 using UnityEngine;
 using UnityModManagerNet;
@@ -28,10 +27,9 @@ public abstract class Main {
     
     private static void OnGUI(UnityModManager.ModEntry mod_entry) {
         GUILayout.Label("Mod Test");
-        GUILayout.Label("Special thanks to C##");
         asdf = GUILayout.TextField(asdf);
         if (GUILayout.Button("Patch")) {
-            EnumPatcher<LevelEventType>.AddField(asdf, k++);
+            EventTypePatcher.AddField(asdf, k++);
         }
 
         if (GUILayout.Button("Parse")) {

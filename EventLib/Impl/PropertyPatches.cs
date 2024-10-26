@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using ADOFAI;
+using ADOFAI.LevelEditor.Controls;
 using EventLib.CustomEvent;
 using EventLib.Mapping;
 using HarmonyLib;
@@ -70,7 +71,7 @@ public static class PropertyPatches {
     [HarmonyPatch(typeof(PropertyControl_Color), "Setup")]
     public static class PropertySetPatchColor {
         public static void Postfix(PropertyControl_Color __instance) {
-            __instance.inputField.onEndEdit.AddListener(_ => {
+            __instance.colorField.onChange.AddListener(_ => {
                 UpdateValues(__instance);
             });
         }

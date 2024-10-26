@@ -521,6 +521,7 @@
         <Compile Include="CustomEvent\EventAttrs.cs" />
         <Compile Include="CustomEvent\TestEventBase.cs" />
         <Compile Include="EventHandler\IFloorUpdateHandler.cs" />
+    <Compile Include="EventTypePatcher.cs" />
         <Compile Include="Impl\AddEventPatch.cs" />
         <Compile Include="Impl\DisplayPatch.cs" />
         <Compile Include="Impl\EventHandlerPatch.cs" />

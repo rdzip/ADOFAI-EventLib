@@ -5,7 +5,6 @@ using System.Linq;
 using System.Management.Instrumentation;
 using System.Reflection;
 using ADOFAI;
-using ERDPatch;
 using EventLib.Mapping;
 using HarmonyLib;
 using UnityEngine;
@@ -45,7 +44,7 @@ public static class CustomEventManager {
         info.name = attr.id;
         info.type = attr.levelEventType;
         
-        EnumPatcher<LevelEventType>.AddField(info.name, (ulong) info.type);
+        EventTypePatcher.AddField(info.name, (ulong) info.type);
         var iconMethod = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic).FirstOrDefault(m => m.GetCustomAttribute<EventIconAttribute>() != null);
         GCS.levelEventIcons[info.type] = (Sprite) iconMethod?.Invoke(null, Array.Empty<object>()) ?? GCS.levelEventIcons[LevelEventType.KillPlayer];
         GCS.levelEventTypeString[info.type] = info.name;
